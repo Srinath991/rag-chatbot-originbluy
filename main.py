@@ -1,6 +1,4 @@
-def main():
-    print("Hello from originbluy-rag!")
+from app.api import app
+from fastapi.staticfiles import StaticFiles
 
-
-if __name__ == "__main__":
-    main()
+app.mount("/", StaticFiles(directory="static", html=True), name="static")

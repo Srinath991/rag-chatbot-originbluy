@@ -8,4 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
-AI Developer (LLM) - Technical Task.pdf
+
+#environment variables
+.env

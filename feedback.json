@@ -1,0 +1,14 @@
+[
+  {
+    "query": "summarise the doc",
+    "response": "Loading...",
+    "helpful": true,
+    "role": null
+  },
+  {
+    "query": "summarise the doc",
+    "response": "Loading...",
+    "helpful": true,
+    "role": "manager"
+  }
+]
