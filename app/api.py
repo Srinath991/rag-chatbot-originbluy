@@ -35,12 +35,12 @@ async def ingest_documents(files: List[UploadFile] = File(...)):
     return {"status": "Documents ingested", "files": [os.path.basename(p) for p in file_paths]}
 
 @app.post("/query/")
-async def query_rag(query: str = Form(...), role: Optional[str] = Form(None)):
+async def query_rag(query: str = Form(...)):
     embeddings = get_embeddings()
     vectordb = load_vector_store(embeddings,)
     retriever = vectordb.as_retriever(search_kwargs={"k": 3})
     rag_chain = get_rag_chain(retriever)
-    result = rag_chain({"question": query, "role": role})
+    result = rag_chain({"question": query})
     answer = result["answer"]
     citations = [os.path.basename(src) for src in result["sources"] if src]
     return {"response": answer, "citations": citations}
