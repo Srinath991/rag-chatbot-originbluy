@@ -17,9 +17,6 @@ feedback_file = "feedback.json"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     os.makedirs(docs_dir, exist_ok=True)
-    if not os.path.exists(feedback_file):
-        with open(feedback_file, "w") as f:
-            json.dump([], f)
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -47,21 +44,3 @@ async def query_rag(query: str = Form(...), role: Optional[str] = Form(None)):
     answer = result["answer"]
     citations = [os.path.basename(src) for src in result["sources"] if src]
     return {"response": answer, "citations": citations}
-
-@app.post("/feedback/")
-async def submit_feedback(query: str = Form(...), response: str = Form(...), helpful: bool = Form(...), role: Optional[str] = Form(None)):
-    feedback = {
-        "query": query,
-        "response": response,
-        "helpful": helpful,
-        "role": role
-    }
-    try:
-        with open(feedback_file, "r+") as f:
-            data = json.load(f)
-            data.append(feedback)
-            f.seek(0)
-            json.dump(data, f, indent=2)
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-    return {"status": "success", "feedback": feedback} 

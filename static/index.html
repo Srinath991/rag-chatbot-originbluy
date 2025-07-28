@@ -4,40 +4,84 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RAG Chatbot</title>
-  <link rel="stylesheet" href="style.css">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-  <div class="container">
-    <h1>RAG Chatbot</h1>
-    <section>
-      <h2>Upload Documents</h2>
-      <form id="upload-form">
-        <input type="file" id="docs" name="docs" multiple required accept=".pdf,.docx,.txt">
-        <button type="submit">Upload</button>
-        <span id="upload-status"></span>
+<body class="bg-gray-100 min-h-screen dark:bg-gray-900 dark:text-white">
+  <div class="max-w-2xl mx-auto mt-12 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+    <h1 class="text-3xl font-bold text-center text-blue-600 dark:text-blue-400 mb-6">RAG Chatbot</h1>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-semibold mb-2">Upload Documents</h2>
+      <form id="upload-form" class="space-y-4">
+        <input type="file" id="docs" name="docs" multiple required accept=".pdf,.docx,.txt" class="block w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700">
+        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Upload</button>
+        <span id="upload-status" class="text-green-600 dark:text-green-400"></span>
       </form>
     </section>
+
     <section>
-      <h2>Ask a Question</h2>
-      <form id="query-form">
-        <input type="text" id="query" name="query" placeholder="Enter your question..." required>
-        <input type="text" id="role" name="role" placeholder="Role (optional)">
-        <button type="submit">Ask</button>
+      <h2 class="text-xl font-semibold mb-2">Ask a Question</h2>
+      <form id="query-form" class="space-y-4">
+        <input type="text" id="query" name="query" placeholder="Enter your question..." required class="block w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700">
+        <input type="text" id="role" name="role" placeholder="Role (optional)" class="block w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700">
+        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">Ask</button>
       </form>
-      <div id="response-box" class="hidden">
-        <h3>Response</h3>
-        <p id="response"></p>
-        <h4>Citations</h4>
-        <ul id="citations"></ul>
-        <form id="feedback-form">
-          <label>Was this helpful?</label>
-          <button type="button" id="helpful-yes">Yes</button>
-          <button type="button" id="helpful-no">No</button>
-        </form>
-        <span id="feedback-status"></span>
+      <div id="response-box" class="hidden mt-6 bg-gray-50 dark:bg-gray-700 p-4 rounded">
+        <h3 class="text-lg font-semibold mb-2">Response</h3>
+        <div id="response" class="prose dark:prose-invert max-w-none"></div>
+        <h4 class="mt-4 font-semibold">Citations</h4>
+        <ul id="citations" class="list-disc list-inside text-sm text-gray-700 dark:text-gray-300"></ul>
       </div>
     </section>
   </div>
-  <script src="script.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Upload documents
+      const uploadForm = document.getElementById('upload-form');
+      const uploadStatus = document.getElementById('upload-status');
+      uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const files = document.getElementById('docs').files;
+        if (!files.length) return;
+        const formData = new FormData();
+        for (const file of files) formData.append('files', file);
+        uploadStatus.textContent = 'Uploading...';
+        try {
+          const res = await fetch('/ingest/', { method: 'POST', body: formData });
+          const data = await res.json();
+          uploadStatus.textContent = data.status === 'Documents ingested' ? 'Uploaded!' : 'Error: ' + (data.status || 'Unknown error');
+        } catch (err) {
+          uploadStatus.textContent = 'Upload failed.';
+        }
+      });
+
+      // Query
+      const queryForm = document.getElementById('query-form');
+      const responseBox = document.getElementById('response-box');
+      const responseText = document.getElementById('response');
+      const citationsList = document.getElementById('citations');
+      queryForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const query = document.getElementById('query').value;
+        const role = document.getElementById('role').value;
+        const formData = new FormData();
+        formData.append('query', query);
+        if (role) formData.append('role', role);
+        responseText.innerHTML = '<em>Loading...</em>';
+        citationsList.innerHTML = '';
+        responseBox.classList.remove('hidden');
+        try {
+          const res = await fetch('/query/', { method: 'POST', body: formData });
+          const data = await res.json();
+          responseText.innerHTML = marked.parse(data.response || 'No answer.');
+          citationsList.innerHTML = (data.citations || []).map(c => `<li>${c}</li>`).join('');
+        } catch (err) {
+          responseText.innerHTML = '<span class="text-red-600">Error fetching response.</span>';
+        }
+      });
+    });
+  </script>
 </body>
-</html> 
+</html>
