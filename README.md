@@ -6,7 +6,7 @@
    git clone https://github.com/Srinath991/rag-chatbot-originbluy
    cd rag-chatbot-originbluy
    ```
-1. Copy `.env.example` to `.env` and add your OpenAI API key:
+1. Copy `.env.example` to `.env` and add your API keys:
    ```sh
    cp .env.example .env
    # Edit .env and set 
